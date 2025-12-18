@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>GPU 状态面板</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background-color: #111;
+      color: #f5f5f5;
+    }
+
+    body {
+      margin: 0;
+      padding: 1.5rem;
+      line-height: 1.5;
+      background: linear-gradient(180deg, #0d1117 0%, #0d1927 100%);
+    }
+
+    h1, h2 {
+      margin: 0.5rem 0 0.75rem;
+      font-weight: 600;
+    }
+
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(90, 110, 130, 0.4);
+    }
+
+    .page-title {
+      margin: 0;
+      font-size: 2rem;
+      letter-spacing: 0.02em;
+      text-align: center;
+      width: 100%;
+    }
+
+    .timestamp {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #9cb4d8;
+      align-self: flex-end;
+      width: 100%;
+      text-align: right;
+    }
+
+    section {
+      margin-bottom: 2rem;
+      padding: 1.25rem;
+      background: rgba(20, 29, 40, 0.9);
+      border-radius: 12px;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(90, 110, 130, 0.35);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    th {
+      color: #9cb4d8;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .pill {
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .pill-ok {
+      background: rgba(46, 204, 113, 0.18);
+      color: #2ecc71;
+    }
+
+    .pill-warn {
+      background: rgba(243, 156, 18, 0.2);
+      color: #f39c12;
+    }
+
+    .pill-alert {
+      background: rgba(231, 76, 60, 0.2);
+      color: #e74c3c;
+    }
+
+    .placeholder {
+      color: #f39c12;
+      font-weight: 600;
+    }
+
+    .error {
+      color: #ff8797;
+      font-weight: 600;
+    }
+
+    .gpu-remark {
+      margin-left: 0.75rem;
+      color: #9cb4d8;
+      font-size: 0.9rem;
+      font-weight: 400;
+    }
+
+    .is-collapsed {
+      display: none;
+    }
+
+    .node-card {
+      border: 1px solid rgba(90, 110, 130, 0.35);
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: rgba(13, 17, 23, 0.6);
+    }
+
+    .node-toggle {
+      width: 100%;
+      background: none;
+      border: none;
+      color: inherit;
+      padding: 0.75rem 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .node-toggle:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .node-toggle:focus-visible {
+      outline: 2px solid #4c8bf5;
+      outline-offset: -2px;
+    }
+
+    .node-title {
+      font-size: 1.05rem;
+      display: flex;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+
+    .node-gres {
+      font-size: 0.9rem;
+      color: #9cb4d8;
+    }
+
+    .node-summary {
+      color: #9cb4d8;
+      font-size: 0.9rem;
+    }
+
+    .node-content {
+      padding: 0 1rem 1rem;
+    }
+
+    .notices-block {
+      margin-bottom: 1.5rem;
+      padding-left: 1rem;
+    }
+
+    .notices-heading {
+      margin: 0 0 0.35rem;
+      font-size: 1.1rem;
+      color: #dfe7f5;
+    }
+
+    .notices-list {
+      margin: 0;
+      padding-left: 1.5rem;
+      list-style: square;
+      color: #bcc9e7;
+      font-size: 0.95rem;
+    }
+
+    .notice-item {
+      margin: 0.4rem 0;
+      line-height: 1.4;
+    }
+
+    .notice-item time {
+      color: #8cb4ff;
+      margin-right: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .notice-item strong {
+      color: #f7faff;
+      margin-right: 0.35rem;
+    }
+
+    @media (max-width: 820px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+
+      th {
+        display: none;
+      }
+
+      td {
+        padding: 0.35rem 0;
+        border: none;
+      }
+
+      td::before {
+        content: attr(data-label);
+        display: inline-block;
+        width: 45%;
+        color: #9cb4d8;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <h1 class="page-title">集群 GPU 状态</h1>
+    <p id="timestamp" class="timestamp">最后更新：加载中…</p>
+  </div>
+
+  <div id="notices-block" class="notices-block" hidden>
+    <h2 class="notices-heading">公告</h2>
+    <ul id="notices-list" class="notices-list"></ul>
+  </div>
+
+  <section>
+    <h2>GPU 使用情况 <span id="gpu-remark" class="gpu-remark">[加载中…]</span></h2>
+    <div id="gpu-table">加载中…</div>
+  </section>
+
+  <section>
+    <h2>运行中的作业</h2>
+    <div id="running-table">加载中…</div>
+  </section>
+
+  <section>
+    <h2>排队中的作业</h2>
+    <div id="queued-table">加载中…</div>
+  </section>
+
+  <script>
+    async function loadStatus() {
+      try {
+        const response = await fetch('gpu_status.json');
+        if (!response.ok) {
+          throw new Error(`加载 JSON 失败：${response.status}`);
+        }
+        const data = await response.json();
+        const reportedTimestamp = data?.timestamp ? new Date(data.timestamp) : null;
+        const timestampEl = document.getElementById('timestamp');
+        if (timestampEl) {
+          const fallback = new Date();
+          const displayTime = reportedTimestamp || fallback;
+          timestampEl.textContent =
+            `最后更新：${displayTime.toLocaleString()}${reportedTimestamp ? '' : '（本地时间）'}`;
+        }
+        renderGpuTable(data.gpu_status);
+        renderJobsTable('running-table', data.running_jobs, 'R', { showAllocatedNodes: true, showGres: true });
+        renderJobsTable('queued-table', data.queued_jobs, 'PD', { showGres: true });
+      } catch (err) {
+        document.getElementById('gpu-table').innerHTML =
+          `<p class="error">${err.message}</p>`;
+        const remark = document.getElementById('gpu-remark');
+        if (remark) {
+          remark.textContent = '[暂无数据]';
+        }
+        document.getElementById('running-table').innerHTML = '';
+        document.getElementById('queued-table').innerHTML = '';
+      }
+    }
+
+    async function loadNotices() {
+      const block = document.getElementById('notices-block');
+      const list = document.getElementById('notices-list');
+      if (!block || !list) {
+        return;
+      }
+
+      try {
+        const response = await fetch('notices.json');
+        if (!response.ok) {
+          throw new Error('无法加载公告');
+        }
+        const data = await response.json();
+        const notices = Array.isArray(data?.notices) ? data.notices : [];
+        if (!notices.length) {
+          block.hidden = true;
+          return;
+        }
+
+        list.innerHTML = notices.map(notice => `
+          <li class="notice-item">
+            ${notice.date ? `<time>${notice.date}</time>` : ''}
+            ${notice.title ? `<strong>${notice.title}</strong>` : ''}
+            ${notice.message || ''}
+          </li>
+        `).join('');
+
+        block.hidden = false;
+      } catch (err) {
+        block.hidden = true;
+      }
+    }
+
+    function formatPill(value, thresholds) {
+      let cls = 'pill-ok';
+      if (value >= thresholds.alert) {
+        cls = 'pill-alert';
+      } else if (value >= thresholds.warn) {
+        cls = 'pill-warn';
+      }
+      return `<span class="pill ${cls}">${value}%</span>`;
+    }
+
+    function renderGpuTable(entries) {
+      const container = document.getElementById('gpu-table');
+      const remark = document.getElementById('gpu-remark');
+      if (!entries?.length) {
+        container.textContent = '暂无数据';
+        if (remark) {
+          remark.textContent = '[暂无数据]';
+        }
+        return;
+      }
+
+      const grouped = entries.reduce((acc, entry) => {
+        if (!acc[entry.node]) {
+          acc[entry.node] = [];
+        }
+        acc[entry.node].push(entry);
+        return acc;
+      }, {});
+
+      const nodeStats = Object.entries(grouped)
+        .sort(([nodeA], [nodeB]) => nodeA.localeCompare(nodeB))
+        .map(([node, gpus]) => {
+          const sortedGpus = [...gpus].sort((a, b) => a.gpu_index - b.gpu_index);
+          const totalCount = sortedGpus.length;
+          const totalGpuUtil = sortedGpus.reduce((sum, g) => sum + (g.gpu_util ?? 0), 0);
+          const totalMemPercent = sortedGpus.reduce((sum, g) => sum + (g.mem_percent ?? 0), 0);
+          const activeCount = sortedGpus.filter(g =>
+            (g.gpu_util ?? 0) > 0 || (g.mem_percent ?? 0) > 0).length;
+          const peakGpuUtil = sortedGpus.reduce((max, g) =>
+            Math.max(max, g.gpu_util ?? 0), 0);
+          const peakMem = sortedGpus.reduce((max, g) =>
+            Math.max(max, g.mem_percent ?? 0), 0);
+          const reportedAllocated = parseInt(sortedGpus[0]?.gres_allocated, 10);
+          const allocatedCount = Math.max(
+            0,
+            Math.min(totalCount, Number.isFinite(reportedAllocated) ? reportedAllocated : 0)
+          );
+          const safeId = `node-${node.replace(/[^a-z0-9_-]/gi, '-')}`;
+          const rows = sortedGpus.map(({ gpu_index, gpu_util, mem_percent, mem_used_mb, mem_total_mb }) => `
+            <tr>
+              <td data-label="GPU">${gpu_index}</td>
+              <td data-label="计算利用率">${formatPill(gpu_util, { warn: 70, alert: 90 })}</td>
+              <td data-label="显存占用">${formatPill(mem_percent, { warn: 80, alert: 90 })}</td>
+              <td data-label="显存详情">${mem_used_mb.toLocaleString()} / ${mem_total_mb.toLocaleString()} MB</td>
+            </tr>
+          `).join('');
+
+          return {
+            node,
+            safeId,
+            rows,
+            activeCount,
+            totalCount,
+            peakGpuUtil,
+            peakMem,
+            allocatedCount,
+            avgGpuUtil: Math.round(totalGpuUtil / totalCount),
+            avgMemPercent: Math.round(totalMemPercent / totalCount)
+          };
+        });
+
+      const cards = nodeStats.map(({ node, safeId, rows, activeCount, totalCount, peakGpuUtil, peakMem, allocatedCount }) => `
+        <div class="node-card">
+          <button class="node-toggle" type="button"
+            aria-expanded="false" aria-controls="${safeId}">
+            <span class="node-title">
+              <span>${node}</span>
+              <span class="node-gres">[${allocatedCount}/${totalCount}]</span>
+            </span>
+            <span class="node-summary">
+              活跃 ${activeCount}/${totalCount} · 峰值 GPU ${peakGpuUtil}% · 峰值显存 ${peakMem}%
+            </span>
+          </button>
+          <div id="${safeId}" class="node-content is-collapsed">
+            <table>
+              <thead>
+                <tr>
+                  <th>GPU</th>
+                  <th>计算利用率</th>
+                  <th>显存占用</th>
+                  <th>显存 (已用 / 总计)</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        </div>
+      `).join('');
+
+      const totalGpuCount = nodeStats.reduce((sum, stat) => sum + stat.totalCount, 0);
+      const totalAllocated = nodeStats.reduce((sum, stat) => sum + stat.allocatedCount, 0);
+      const idleCount = totalGpuCount - totalAllocated;
+      if (remark) {
+        remark.textContent = `[空闲 GPU ${idleCount}/${totalGpuCount}]`;
+      }
+
+      container.innerHTML = cards;
+
+      container.querySelectorAll('.node-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+          const expanded = button.getAttribute('aria-expanded') === 'true';
+          const nextState = !expanded;
+          const contentId = button.getAttribute('aria-controls');
+          const content = contentId ? document.getElementById(contentId) : null;
+          button.setAttribute('aria-expanded', String(nextState));
+          if (content) {
+            content.classList.toggle('is-collapsed', !nextState);
+          }
+        });
+      });
+    }
+
+    function renderJobsTable(containerId, jobs, defaultState, options = {}) {
+      const {
+        showAllocatedNodes = false,
+        showGres = false
+      } = options;
+      const container = document.getElementById(containerId);
+      if (!jobs?.length) {
+        container.textContent = '暂无数据';
+        return;
+      }
+
+      const rows = jobs.map(job => `
+        <tr>
+          <td data-label="作业 ID">${job.job_id}</td>
+          <td data-label="用户">${job.user}</td>
+          <td data-label="分区">${job.partition}</td>
+          <td data-label="作业名">${job.job_name}</td>
+          <td data-label="节点">${job.nodes}</td>
+          ${showAllocatedNodes ? `<td data-label="分配节点">${job.allocated_nodes || '-'}</td>` : ''}
+          ${showGres ? `<td data-label="GRES">${job.gres || '-'}</td>` : ''}
+          <td data-label="耗时">${job.time_used}</td>
+          <td data-label="限制">${job.time_limit}</td>
+          <td data-label="CPU">${job.cpus}</td>
+          <td data-label="内存">${job.mem}</td>
+          <td data-label="状态">${job.state || defaultState}</td>
+          <td data-label="占位">${formatPlaceholderStatus(job)}</td>
+        </tr>
+      `).join('');
+
+      container.innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th>作业 ID</th>
+              <th>用户</th>
+              <th>分区</th>
+              <th>作业名</th>
+              <th>节点</th>
+              ${showAllocatedNodes ? '<th>分配节点</th>' : ''}
+              ${showGres ? '<th>GRES</th>' : ''}
+              <th>耗时</th>
+              <th>时间限制</th>
+              <th>CPU</th>
+              <th>内存</th>
+              <th>状态</th>
+              <th>占位</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+    }
+
+    function formatPlaceholderStatus(job) {
+      const jobName = (job?.job_name || '').trim().toLowerCase();
+      if (job?.is_placeholder === 'true') {
+        return '<span class="placeholder">占位</span>';
+      }
+      if (jobName === 'bash' || jobName === 'interactive') {
+        return '<span class="placeholder">疑似占位</span>';
+      }
+      return '否';
+    }
+
+    loadStatus();
+    loadNotices();
+  </script>
+</body>
+</html>

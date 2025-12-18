@@ -1,0 +1,17 @@
+[Unit]
+Description=GPU queue monitor
+After=network.target
+
+[Service]
+Type=simple
+# Replace hpc-monitor with the service account that has access to SLURM.
+User=hpc-monitor
+Restart=on-failure
+RestartSec=5s
+# Update the paths below to where the scripts live on your host.
+Environment="TARGET_SCRIPT=/opt/hpc_monitor/hpc_gpu_status.sh"
+ExecStart=/usr/bin/bash /opt/hpc_monitor/run_per_5_mins.sh
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target
