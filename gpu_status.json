@@ -5,10 +5,10 @@
     {"node": "node01", "gpu_index": 1, "gpu_util": 65, "mem_util": 55, "mem_used_mb": 45056, "mem_total_mb": 65536, "mem_percent": 69, "gres_allocated": "4"},
     {"node": "node01", "gpu_index": 2, "gpu_util": 12, "mem_util": 10, "mem_used_mb": 5120, "mem_total_mb": 65536, "mem_percent": 7, "gres_allocated": "4"},
     {"node": "node01", "gpu_index": 3, "gpu_util": 5, "mem_util": 4, "mem_used_mb": 4096, "mem_total_mb": 65536, "mem_percent": 6, "gres_allocated": "4"},
-    {"node": "node02", "gpu_index": 0, "gpu_util": 98, "mem_util": 82, "mem_used_mb": 57344, "mem_total_mb": 65536, "mem_percent": 88, "gres_allocated": "8"},
-    {"node": "node02", "gpu_index": 1, "gpu_util": 95, "mem_util": 80, "mem_used_mb": 56320, "mem_total_mb": 65536, "mem_percent": 86, "gres_allocated": "8"},
-    {"node": "node02", "gpu_index": 2, "gpu_util": 16, "mem_util": 12, "mem_used_mb": 8192, "mem_total_mb": 65536, "mem_percent": 12, "gres_allocated": "8"},
-    {"node": "node02", "gpu_index": 3, "gpu_util": 0, "mem_util": 0, "mem_used_mb": 2048, "mem_total_mb": 65536, "mem_percent": 3, "gres_allocated": "8"}
+    {"node": "node02", "gpu_index": 0, "gpu_util": 98, "mem_util": 82, "mem_used_mb": 57344, "mem_total_mb": 65536, "mem_percent": 88, "gres_allocated": "4"},
+    {"node": "node02", "gpu_index": 1, "gpu_util": 95, "mem_util": 80, "mem_used_mb": 56320, "mem_total_mb": 65536, "mem_percent": 86, "gres_allocated": "4"},
+    {"node": "node02", "gpu_index": 2, "gpu_util": 16, "mem_util": 12, "mem_used_mb": 8192, "mem_total_mb": 65536, "mem_percent": 12, "gres_allocated": "4"},
+    {"node": "node02", "gpu_index": 3, "gpu_util": 0, "mem_util": 0, "mem_used_mb": 2048, "mem_total_mb": 65536, "mem_percent": 3, "gres_allocated": "4"}
   ],
   "queued_jobs": [
     {

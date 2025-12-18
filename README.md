@@ -29,6 +29,9 @@
 ### 任务队列监控
 ![任务队列界面](./images/tasks.png)
 
+### 命令行查看
+![命令行查看界面](./images/console.png)
+
 ## 🚀 快速上手  
 
 ### 1. 采集 GPU 状态  
@@ -81,6 +84,17 @@ python -m http.server --directory ./ 9811
 
 把 `gpu_status.json` 与 `notices.json` 放在与 `index.html` 相同目录或可被前端访问的路径，即可通过浏览器或 VS Code 端口转发访问。也可以使用 Nginx 等服务暴露到公网。  
 
+### 3. 命令行查看 📋  
+
+也可执行python脚本在命令行中输出：  
+
+```bash
+pip install rich
+python -m display_status \
+  --status-file ./gpu_status.json \
+  --notices-file ./notices.json \
+  --console-width 150
+```
 
 ## ⚠️ 注意事项  
 
